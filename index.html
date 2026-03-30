@@ -94,9 +94,13 @@ input[type="date"], select {
     <h3 style="color:#007bff; margin-bottom:10px;">Backup / Import</h3>
     <textarea id="backupArea" style="height: 180px; font-size: 0.7rem; margin-bottom: 15px; font-family: monospace;"></textarea>
     
-<div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+<div style="display:grid; grid-style; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
     <button onclick="copyBackup()" style="background: #007bff; font-size: 0.8rem;">Kopieren</button>
-    <button onclick="downloadBackup()" style="background: #FF9C07; font-size: 0.8rem;">Download</button>
+    
+    <button onclick="pasteBackup()" style="background: #fd7e14; font-size: 0.8rem;">Einfügen</button>
+    
+    <button onclick="downloadBackup()" style="background: #6f42c1; font-size: 0.8rem;">Download</button>
+    
     <button onclick="clearBackupField()" style="background: #ff4d4d; font-size: 0.8rem;">Löschen</button>
 </div>
 
@@ -240,6 +244,18 @@ input[type="date"], select {
     </div>
 
     <script>
+
+window.pasteBackup = async () => {
+    try {
+        const text = await navigator.clipboard.readText();
+        if (text) {
+            document.getElementById('backupArea').value = text;
+        }
+    } catch (err) {
+        alert("Zugriff auf Zwischenablage verweigert. Bitte füge den Text manuell ein.");
+    }
+};
+
         const KEY_NOTES = 'db_notes_v25', KEY_EVENTS = 'db_events_v25', KEY_TODOS = 'db_todos_v25', KEY_FINANCE = 'db_finance_v25', KEY_CITY = 'db_city_v25';
         const store = (k, d) => localStorage.setItem(k, JSON.stringify(d));
         const load = (k) => JSON.parse(localStorage.getItem(k)) || (k === KEY_EVENTS ? {} : (k === KEY_FINANCE ? {name:'', total:0, items:[]} : (k === KEY_CITY ? 'Aschaffenburg' : [])));
