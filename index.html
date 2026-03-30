@@ -75,12 +75,18 @@
 <body>
     <div id="overlay" onclick="closeModal()"></div>
     
-    <div id="backupModal">
-        <h3 style="color:#007bff; margin-bottom:10px;">Backup / Import</h3>
-        <textarea id="backupArea" style="height: 180px; font-size: 0.7rem; margin-bottom: 15px; font-family: monospace;"></textarea>
-        <button onclick="processImport()" style="width:100%; background: #28a745; margin-bottom:10px;">Importieren</button>
-        <button onclick="closeModal()" style="width:100%; background: #444;">Schließen</button>
+<div id="backupModal">
+    <h3 style="color:#007bff; margin-bottom:10px;">Backup / Import</h3>
+    <textarea id="backupArea" style="height: 180px; font-size: 0.7rem; margin-bottom: 15px; font-family: monospace;"></textarea>
+    
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+        <button onclick="copyBackup()" style="background: #007bff;">Kopieren</button>
+        <button onclick="clearBackupField()" style="background: #ff4d4d;">Löschen</button>
     </div>
+
+    <button onclick="processImport()" style="width:100%; background: #28a745; margin-bottom:10px;">Importieren</button>
+    <button onclick="closeModal()" style="width:100%; background: #444;">Schließen</button>
+</div>
 
     <div id="modal">
         <h3 id="modalDate" style="color:#007bff; margin-bottom:15px;">Termine</h3>
@@ -249,9 +255,30 @@ window.processImport = () => {
         store(KEY_TODOS, d.t); 
         store(KEY_FINANCE, d.f); 
         store(KEY_CITY, d.c);
-        store(KEY_BDAYS, d.b); // <-- Diese Zeile hinzufügen
+        store(KEY_BDAYS, d.b);
         location.reload();
     } catch(e) { alert("Fehler!"); }
+};
+
+// --- HIER DIE NEUEN FUNKTIONEN EINFÜGEN ---
+
+window.copyBackup = () => {
+    const area = document.getElementById('backupArea');
+    area.select();
+    area.setSelectionRange(0, 99999); // Wichtig für iPhone/Safari
+    navigator.clipboard.writeText(area.value);
+    
+    // Visuelles Feedback am Button
+    const btn = event.target;
+    const oldText = btn.innerText;
+    btn.innerText = "Kopiert!";
+    setTimeout(() => btn.innerText = oldText, 2000);
+};
+
+window.clearBackupField = () => {
+    if(confirm("Textfeld leeren? (Deine gespeicherten Daten bleiben erhalten)")) {
+        document.getElementById('backupArea').value = "";
+    }
 };
 
         let cExp = "0";
