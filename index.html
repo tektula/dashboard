@@ -227,20 +227,32 @@
         }
         window.saveCity = () => { const val = document.getElementById('cityInput').value.trim(); if(val) { store(KEY_CITY, val); fetchWeather(); document.getElementById('cityInput').blur(); } };
 
-        window.openBackupModal = () => {
-            const data = { n:load(KEY_NOTES), e:load(KEY_EVENTS), t:load(KEY_TODOS), f:load(KEY_FINANCE), c:load(KEY_CITY) };
-            document.getElementById('backupArea').value = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
-            document.getElementById('backupModal').style.display = 'block';
-            document.getElementById('overlay').style.display = 'block';
-        };
-        window.processImport = () => {
-            const val = document.getElementById('backupArea').value; if(!val) return;
-            try {
-                const d = JSON.parse(decodeURIComponent(escape(atob(val))));
-                store(KEY_NOTES, d.n); store(KEY_EVENTS, d.e); store(KEY_TODOS, d.t); store(KEY_FINANCE, d.f); store(KEY_CITY, d.c);
-                location.reload();
-            } catch(e) { alert("Fehler!"); }
-        };
+window.openBackupModal = () => {
+    const data = { 
+        n:load(KEY_NOTES), 
+        e:load(KEY_EVENTS), 
+        t:load(KEY_TODOS), 
+        f:load(KEY_FINANCE), 
+        c:load(KEY_CITY),
+        b:load(KEY_BDAYS) // <-- Diese Zeile hinzufügen
+    };
+    document.getElementById('backupArea').value = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+    document.getElementById('backupModal').style.display = 'block';
+    document.getElementById('overlay').style.display = 'block';
+};
+window.processImport = () => {
+    const val = document.getElementById('backupArea').value; if(!val) return;
+    try {
+        const d = JSON.parse(decodeURIComponent(escape(atob(val))));
+        store(KEY_NOTES, d.n); 
+        store(KEY_EVENTS, d.e); 
+        store(KEY_TODOS, d.t); 
+        store(KEY_FINANCE, d.f); 
+        store(KEY_CITY, d.c);
+        store(KEY_BDAYS, d.b); // <-- Diese Zeile hinzufügen
+        location.reload();
+    } catch(e) { alert("Fehler!"); }
+};
 
         let cExp = "0";
         function calcInput(v) { 
