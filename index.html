@@ -67,7 +67,7 @@
         #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 999; }
         #modal, #backupModal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1e1e1e; border: 1px solid #007bff; padding: 25px; border-radius: 15px; z-index: 1000; width: 90%; max-width: 450px; }
 
-.bday-item { background: #2a2a2a; border-radius: 8px; padding: 10px; margin-bottom: 8px; border-left: 4px solid #ff007b; display: flex; justify-content: space-between; align-items: center; }
+.bday-item { background: #2a2a2a; border-radius: 8px; padding: 12px; margin-bottom: 10px; border-left: 4px solid #ff007b; display: flex; align-items: center; justify-content: space-between; }
 .bday-next { background: #351a26; border-color: #ff007b; font-weight: bold; }
 
     </style>
@@ -160,8 +160,8 @@
 <section class="tile">
     <h2>Geburtstage</h2>
     <div class="input-row">
-        <input type="text" id="bdayName" placeholder="Name">
-        <input type="text" id="bdayDate" placeholder="TT.MM." style="width:80px; flex:none;">
+        <input type="text" id="bdayName" placeholder="Name..." onkeydown="if(event.key==='Enter') addBday()">
+        <input type="text" id="bdayDate" placeholder="TT.MM." style="width:75px; flex:none;" onkeydown="if(event.key==='Enter') addBday()">
         <button onclick="addBday()">+</button>
     </div>
     <div class="content" id="bdayCont"></div>
@@ -362,43 +362,38 @@
 
 const KEY_BDAYS = 'db_bdays_v25';
 function renderBdays() {
-    const b = load(KEY_BDAYS), now = new Date();
+    const b = JSON.parse(localStorage.getItem(KEY_BDAYS)) || [], now = new Date();
     const todayMMDD = (now.getMonth() + 1) * 100 + now.getDate();
     
-    // Sortierung: Wer kommt als nächstes (heute oder später im Jahr), dann Rest ab Neujahr
     const sorted = b.sort((a, b) => {
-        const valA = parseInt(a.d.split('.')[1]) * 100 + parseInt(a.d.split('.')[0]);
-        const valB = parseInt(b.d.split('.')[1]) * 100 + parseInt(b.d.split('.')[0]);
+        const [da, ma] = a.d.split('.').map(Number);
+        const [db, mb] = b.d.split('.').map(Number);
+        const valA = ma * 100 + da;
+        const valB = mb * 100 + db;
         const diffA = valA >= todayMMDD ? valA - todayMMDD : valA + 10000;
         const diffB = valB >= todayMMDD ? valB - todayMMDD : valB + 10000;
         return diffA - diffB;
     });
 
-    document.getElementById('bdayCont').innerHTML = sorted.map((item, i) => {
-        const isNext = i === 0;
-        return `<div class="bday-item ${isNext ? 'bday-next' : ''}">
-            <span>${item.n}</span>
-            <div style="display:flex; align-items:center; gap:10px;">
-                <small>${item.d}</small>
-                <span onclick="delBday(${i})" style="color:red; cursor:pointer;">✕</span>
-            </div>
-        </div>`;
-    }).join('');
+    document.getElementById('bdayCont').innerHTML = sorted.map((item, i) => `
+        <div class="bday-item ${i === 0 ? 'bday-next' : ''}">
+            <div style="flex:1">${item.n} <small style="color:#ff007b; margin-left:10px;">${item.d}</small></div>
+            <span onclick="delBday(${i})" style="color:red; cursor:pointer; margin-left:10px;">✕</span>
+        </div>`).join('');
 }
-
 window.addBday = () => {
-    const n = document.getElementById('bdayName'), d = document.getElementById('bdayDate'), b = load(KEY_BDAYS);
+    const n = document.getElementById('bdayName'), d = document.getElementById('bdayDate'), b = JSON.parse(localStorage.getItem(KEY_BDAYS)) || [];
     if(!n.value || !d.value.includes('.')) return;
     b.push({n: n.value, d: d.value});
-    store(KEY_BDAYS, b); n.value = ''; d.value = ''; renderBdays();
+    localStorage.setItem(KEY_BDAYS, JSON.stringify(b));
+    n.value = ''; d.value = ''; renderBdays();
 };
-
 window.delBday = (i) => {
-    const b = load(KEY_BDAYS); b.splice(i, 1);
-    store(KEY_BDAYS, b); renderBdays();
+    const b = JSON.parse(localStorage.getItem(KEY_BDAYS)) || [];
+    b.splice(i, 1);
+    localStorage.setItem(KEY_BDAYS, JSON.stringify(b));
+    renderBdays();
 };
-
-// Initiales Laden hinzufügen
 renderBdays();
 
     </script>
