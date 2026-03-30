@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Pro v25.2 (Fixed & Contained)</title>
+    <title>Dashboard Pro</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body, html { min-height: 100%; font-family: 'Segoe UI', sans-serif; background-color: #0f0f0f; color: #e0e0e0; font-size: 16px; overflow-y: auto; }
@@ -70,6 +70,10 @@
 .bday-item { background: #2a2a2a; border-radius: 8px; padding: 12px; margin-bottom: 10px; border-left: 4px solid #ff007b; display: flex; align-items: center; justify-content: space-between; }
 .bday-next { background: #351a26; border-color: #ff007b; font-weight: bold; }
 
+.link-item { background: #2a2a2a; border-radius: 8px; padding: 10px; margin-bottom: 8px; border-left: 4px solid #28a745; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: background 0.2s; }
+.link-item:hover { background: #333; }
+.link-text { flex: 1; color: #e0e0e0; text-decoration: none; font-size: 0.9rem; font-weight: bold; }
+
     </style>
 </head>
 <body>
@@ -110,6 +114,7 @@
             <div class="weather-wrap">
                 <span id="weatherDisplay">Wetter lädt...</span>
                 <input type="text" id="cityInput" onkeydown="if(event.key==='Enter') saveCity()">
+
             </div>
             <div class="content" style="text-align:left;">
                 <h2 style="font-size:0.75rem;">Agenda (7 Tage)</h2>
@@ -122,7 +127,7 @@
         <section class="tile">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-shrink: 0;">
                 <h2 id="monthLabel" style="border:none; margin:0;">Kalender</h2>
-                <div><button onclick="changeMonth(-1)"><</button><button onclick="changeMonth(1)">></button></div>
+                <div><button onclick="changeMonth(-1)" style="margin-right: 8px;"><</button><button onclick="changeMonth(1)">></button></div>
             </div>
             <div class="content"><div class="cal-grid" id="calendar"></div></div>
         </section>
@@ -131,12 +136,12 @@
             <h2>Aufgaben</h2>
             <div style="display:grid; gap:5px; margin-bottom:15px; flex-shrink: 0;">
                 <div class="input-row">
-                    <input type="text" id="todoIn" placeholder="Aufgabe..." onkeydown="if(event.key==='Enter') addTodo()">
-                    <button onclick="addTodo()">+</button>
+                    <input type="text" style="width:84%; flex:none; id="todoIn" placeholder="Aufgabe..." onkeydown="if(event.key==='Enter') addTodo()">
+                    <button onclick="addLink()" style="width:14%; flex:none;">+</button>
                 </div>
                 <div class="input-row">
-                    <input type="date" id="todoDate">
-                    <select id="todoRepeat" style="flex:1">
+                    <input type="date" id="todoDate" style="width:49%;flex:none">
+                    <select id="todoRepeat" style="width:49%;flex:none">
                         <option value="none">Einmalig</option>
                         <option value="daily">Täglich</option>
                         <option value="weekly">Wöchentlich</option>
@@ -167,9 +172,9 @@
 <section class="tile">
     <h2>Geburtstage</h2>
     <div class="input-row">
-        <input type="text" id="bdayName" placeholder="Name..." onkeydown="if(event.key==='Enter') addBday()">
-        <input type="text" id="bdayDate" placeholder="d.m." style="width:60px; flex:none;" onkeydown="if(event.key==='Enter') addBday()">
-<button onclick="addBday()" style="margin-right: 5px;">+</button>
+        <input type="text" style="width:42%;flex:none" id="bdayName" placeholder="Name..." onkeydown="if(event.key==='Enter') addBday()">
+        <input type="text" id="bdayDate" placeholder="TT.MM." style="width:42%; flex:none;" onkeydown="if(event.key==='Enter') addBday()">
+<button onclick="addBday()" style="width:14%;flex:none">+</button>
     </div>
     <div class="content" id="bdayCont"></div>
 </section>
@@ -178,13 +183,13 @@
             <h2>Finanz Check</h2>
             <div id="budgetLeft" class="budget-left">0,00 €</div>
             <div class="input-row">
-                <input type="text" id="budgetName" placeholder="Zweck">
-                <input type="number" id="budgetTotal" placeholder="Budget" style="width:80px; flex:none;" onchange="updateFinance()">
+                <input type="text" style="width:50%;flex:none" id="budgetName" placeholder="Budget">
+                <input type="number" id="budgetTotal" placeholder="Budget" style="width:49.5%; flex:none;" onchange="updateFinance()">
             </div>
             <div class="input-row">
-                <input type="text" id="expName" placeholder="Ausgabe..." onkeydown="if(event.key==='Enter') addExpense()">
-                <input type="number" id="expVal" placeholder="€" style="width:60px; flex:none;" onkeydown="if(event.key==='Enter') addExpense()">
-                <button onclick="addExpense()">+</button>
+                <input type="text" style="width:42%;flex:none" id="expName" placeholder="Ausgabe..." onkeydown="if(event.key==='Enter') addExpense()">
+                <input type="number" id="expVal" placeholder="€" style="width:42%; flex:none;" onkeydown="if(event.key==='Enter') addExpense()">
+                <button style="width:14%;flex:none" onclick="addExpense()">+</button>
             </div>
             <div class="content" id="financeCont"></div>
         </section>
@@ -212,6 +217,15 @@
                 <div class="calc-btn eq" onclick="calcSolve()">=</div>
             </div>
         </section>
+<section class="tile">
+    <h2>Quick-Links</h2>
+    <div class="input-row">
+        <input type="text" id="linkTitle" placeholder="Titel..." style="width:42%; flex:none;" onkeydown="if(event.key==='Enter') addLink()">
+        <input type="text" id="linkUrl" placeholder="URL" style="width:42%; flex:none;" onkeydown="if(event.key==='Enter') addLink()">
+        <button onclick="addLink()" style="width:14%; flex:none;">+</button>
+    </div>
+    <div class="content" id="linkCont"></div>
+</section>
     </div>
 
     <script>
@@ -263,6 +277,7 @@ window.openBackupModal = () => {
         t:load(KEY_TODOS), 
         f:load(KEY_FINANCE), 
         c:load(KEY_CITY),
+l:load(KEY_LINKS),
         b:load(KEY_BDAYS) // <-- Diese Zeile hinzufügen
     };
     document.getElementById('backupArea').value = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
@@ -273,6 +288,7 @@ window.processImport = () => {
     const val = document.getElementById('backupArea').value; if(!val) return;
     try {
         const d = JSON.parse(decodeURIComponent(escape(atob(val))));
+store(KEY_LINKS, d.l);
         store(KEY_NOTES, d.n); 
         store(KEY_EVENTS, d.e); 
         store(KEY_TODOS, d.t); 
@@ -457,6 +473,35 @@ window.delBday = (i) => {
     renderBdays();
 };
 renderBdays();
+
+const KEY_LINKS = 'db_links_v25';
+
+function renderLinks() {
+    const l = JSON.parse(localStorage.getItem(KEY_LINKS)) || [];
+    document.getElementById('linkCont').innerHTML = l.map((item, i) => `
+        <div class="link-item">
+            <div class="link-text" onclick="window.open('${item.u.startsWith('http') ? item.u : 'https://' + item.u}', '_blank')">${item.t}</div>
+            <span onclick="delLink(${i})" style="color:red; cursor:pointer; margin-left:15px; font-weight:bold;">✕</span>
+        </div>`).join('');
+}
+
+window.addLink = () => {
+    const t = document.getElementById('linkTitle'), u = document.getElementById('linkUrl'), l = JSON.parse(localStorage.getItem(KEY_LINKS)) || [];
+    if(!t.value || !u.value) return;
+    l.unshift({t: t.value, u: u.value}); // Neue Links kommen nach ganz oben
+    localStorage.setItem(KEY_LINKS, JSON.stringify(l));
+    t.value = ''; u.value = ''; renderLinks();
+};
+
+window.delLink = (i) => {
+    const l = JSON.parse(localStorage.getItem(KEY_LINKS)) || [];
+    l.splice(i, 1);
+    localStorage.setItem(KEY_LINKS, JSON.stringify(l));
+    renderLinks();
+};
+
+// Initiales Laden
+renderLinks();
 
     </script>
 </body>
