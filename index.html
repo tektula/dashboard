@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mein Dashboard Pro v25.2 (Fixed & Contained)</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body, html { min-height: 100%; font-family: 'Segoe UI', sans-serif; background-color: #0f0f0f; color: #e0e0e0; font-size: 16px; overflow-y: auto; }
+        
+        .dashboard { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); 
+            gap: 15px; padding: 15px; max-width: 100%; margin: 0 auto;
+        }
+
+        .tile { 
+            background-color: #1e1e1e; border: 1px solid #333; border-radius: 12px; padding: 18px; 
+            display: flex; flex-direction: column; 
+            height: 420px; 
+            position: relative; 
+            overflow: hidden; /* Verhindert, dass Inhalte rausragen */
+        }
+        .tile:hover { border-color: #007bff; }
+        
+        h2 { margin-bottom: 12px; font-size: 0.9rem; color: #007bff; text-transform: uppercase; border-bottom: 1px solid #333; padding-bottom: 6px; letter-spacing: 1px; flex-shrink: 0; }
+        
+        .content { flex-grow: 1; overflow-y: auto; padding-right: 5px; }
+        .content::-webkit-scrollbar { width: 4px; }
+        .content::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        
+        /* Flex-Container für Zeilen mit Buttons */
+        .input-row { display: flex; gap: 5px; margin-bottom: 5px; flex-shrink: 0; width: 100%; }
+        
+        input, textarea, select { background: #2a2a2a; color: white; border: 1px solid #444; border-radius: 8px; padding: 10px; font-size: 1rem; width: 100%; outline: none; }
+        
+        /* Sorgt dafür, dass Felder in Reihen Platz für Buttons lassen */
+        .input-row input { flex: 1; width: auto; } 
+
+        button { cursor: pointer; background: #007bff; color: white; border: none; border-radius: 8px; padding: 10px 15px; font-weight: bold; flex-shrink: 0; }
+        
+        .weather-wrap { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 15px; font-size: 0.9rem; color: #aaa; flex-shrink: 0; }
+        #cityInput { width: 100px; padding: 4px; font-size: 0.7rem; border-color: #333; margin: 0; text-align: center; }
+
+        .agenda-item { font-size: 0.9rem; padding: 8px; border-left: 4px solid #007bff; background: #262626; margin-bottom: 8px; display: flex; justify-content: space-between; }
+        .overdue { border-left-color: #ff4d4d !important; color: #ff4d4d !important; font-weight: bold; }
+        .empty-msg { font-size: 0.8rem; color: #555; font-style: italic; text-align: center; padding: 10px; }
+
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+        .cal-cell { background: #262626; height: 45px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; border-radius: 6px; }
+        .cal-cell.today { border: 2px solid #007bff; background: #1a2635; }
+        .dot { width: 5px; height: 5px; background: #007bff; border-radius: 50%; margin: 1px; }
+
+        .todo-item, .note-card, .finance-item { background: #2a2a2a; border-radius: 8px; padding: 12px; margin-bottom: 10px; border-left: 4px solid #007bff; display: flex; align-items: center; }
+        .todo-section-title { font-size: 0.8rem; color: #007bff; margin: 15px 0 8px 0; text-transform: uppercase; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; }
+        .hidden { display: none; }
+        .check-btn { color: #007bff; margin-right: 12px; cursor: pointer; font-size: 1.2rem; }
+
+        .calc-display { background: #000; color: #007bff; padding: 15px; text-align: right; font-size: 1.5rem; border-radius: 8px; margin-bottom: 10px; font-family: monospace; min-height: 60px; word-break: break-all; flex-shrink: 0; }
+        .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; flex-grow: 1; }
+        .calc-btn { background: #333; display: flex; align-items: center; justify-content: center; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .calc-btn.op { background: #007bff; }
+        .calc-btn.eq { background: #28a745; grid-column: span 2; }
+        .budget-left { font-size: 2rem; font-weight: bold; color: #28a745; text-align: center; margin-bottom: 10px; flex-shrink: 0; }
+        .negative { color: #ff4d4d !important; }
+
+        #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 999; }
+        #modal, #backupModal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1e1e1e; border: 1px solid #007bff; padding: 25px; border-radius: 15px; z-index: 1000; width: 90%; max-width: 450px; }
+    </style>
+</head>
+<body>
+    <div id="overlay" onclick="closeModal()"></div>
+    
+    <div id="backupModal">
+        <h3 style="color:#007bff; margin-bottom:10px;">Backup / Import</h3>
+        <textarea id="backupArea" style="height: 180px; font-size: 0.7rem; margin-bottom: 15px; font-family: monospace;"></textarea>
+        <button onclick="processImport()" style="width:100%; background: #28a745; margin-bottom:10px;">Importieren</button>
+        <button onclick="closeModal()" style="width:100%; background: #444;">Schließen</button>
+    </div>
+
+    <div id="modal">
+        <h3 id="modalDate" style="color:#007bff; margin-bottom:15px;">Termine</h3>
+        <div id="eventList" style="margin-bottom:15px; max-height: 200px; overflow-y: auto;"></div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <input type="checkbox" id="eventAllDay" style="width:20px;" onchange="document.getElementById('eventTime').style.display = this.checked ? 'none' : 'block'">
+                <label for="eventAllDay">Ganztägig</label>
+            </div>
+            <input type="time" id="eventTime">
+            <input type="text" id="eventInput" placeholder="Beschreibung..." onkeydown="if(event.key==='Enter') addEvent()">
+            <button onclick="addEvent()">Speichern</button>
+        </div>
+    </div>
+
+    <div class="dashboard">
+        <section class="tile" style="text-align:center;">
+            <div id="clock" style="font-size:3.5rem; font-weight:bold;">00:00</div>
+            <div style="color:#007bff; margin-bottom:5px;"><span id="dateStr"></span> | <span id="mainKW" style="font-weight:bold;"></span></div>
+            <div class="weather-wrap">
+                <span id="weatherDisplay">Wetter lädt...</span>
+                <input type="text" id="cityInput" onkeydown="if(event.key==='Enter') saveCity()">
+            </div>
+            <div class="content" style="text-align:left;">
+                <h2 style="font-size:0.75rem;">Agenda (7 Tage)</h2>
+                <div id="agendaEvents"></div>
+                <div id="agendaTodos" style="margin-top:10px;"></div>
+            </div>
+            <button onclick="openBackupModal()" style="margin-top:10px; opacity:0.3; font-size:0.6rem; background:none; border:1px solid #444; align-self: center;">BACKUP</button>
+        </section>
+
+        <section class="tile">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-shrink: 0;">
+                <h2 id="monthLabel" style="border:none; margin:0;">Kalender</h2>
+                <div><button onclick="changeMonth(-1)"><</button><button onclick="changeMonth(1)">></button></div>
+            </div>
+            <div class="content"><div class="cal-grid" id="calendar"></div></div>
+        </section>
+
+        <section class="tile">
+            <h2>Aufgaben</h2>
+            <div style="display:grid; gap:5px; margin-bottom:15px; flex-shrink: 0;">
+                <div class="input-row">
+                    <input type="text" id="todoIn" placeholder="Aufgabe..." onkeydown="if(event.key==='Enter') addTodo()">
+                    <button onclick="addTodo()">+</button>
+                </div>
+                <div class="input-row">
+                    <input type="date" id="todoDate">
+                    <select id="todoRepeat" style="flex:1">
+                        <option value="none">Einmalig</option>
+                        <option value="daily">Täglich</option>
+                        <option value="weekly">Wöchentlich</option>
+                        <option value="biweekly">Alle 2 Wochen</option>
+                        <option value="monthly">Monatlich</option>
+                        <option value="bimonthly">Alle 2 Monate</option>
+                        <option value="quarterly">Alle 3 Monate</option>
+                        <option value="semiannually">Alle 6 Monate</option>
+                        <option value="annually">Jährlich</option>
+                    </select>
+                </div>
+            </div>
+            <div class="content">
+                <div class="todo-section-title" onclick="toggleSec('todoSec1')">Terminiert <span>▼</span></div>
+                <div id="todoSec1"></div>
+                <div class="todo-section-title" onclick="toggleSec('todoSec2')">Allgemein <span>▼</span></div>
+                <div id="todoSec2"></div>
+            </div>
+        </section>
+
+        <section class="tile">
+            <h2>Notizen</h2>
+            <textarea id="noteText" placeholder="Neue Notiz..." style="height:60px; margin-bottom:10px; flex-shrink: 0;" onkeydown="handleEnter(event, addNote)"></textarea>
+            <button onclick="addNote()" style="margin-bottom:15px; width:100%; flex-shrink: 0;">Notiz speichern</button>
+            <div class="content" id="noteCont"></div>
+        </section>
+
+        <section class="tile">
+            <h2>Finanz Check</h2>
+            <div id="budgetLeft" class="budget-left">0,00 €</div>
+            <div class="input-row">
+                <input type="text" id="budgetName" placeholder="Zweck">
+                <input type="number" id="budgetTotal" placeholder="Budget" style="width:80px; flex:none;" onchange="updateFinance()">
+            </div>
+            <div class="input-row">
+                <input type="text" id="expName" placeholder="Ausgabe..." onkeydown="if(event.key==='Enter') addExpense()">
+                <input type="number" id="expVal" placeholder="€" style="width:60px; flex:none;" onkeydown="if(event.key==='Enter') addExpense()">
+                <button onclick="addExpense()">+</button>
+            </div>
+            <div class="content" id="financeCont"></div>
+        </section>
+
+        <section class="tile">
+            <h2>Taschenrechner</h2>
+            <div class="calc-display" id="calcDisp">0</div>
+            <div class="calc-grid">
+                <div class="calc-btn" style="background:#ff4d4d" onclick="calcClear()">C</div>
+                <div class="calc-btn" onclick="calcInput('/')">/</div>
+                <div class="calc-btn" onclick="calcInput('*')">*</div>
+                <div class="calc-btn" onclick="calcInput('-')">-</div>
+                <div class="calc-btn" onclick="calcInput('7')">7</div>
+                <div class="calc-btn" onclick="calcInput('8')">8</div>
+                <div class="calc-btn" onclick="calcInput('9')">9</div>
+                <div class="calc-btn op" onclick="calcInput('+')">+</div>
+                <div class="calc-btn" onclick="calcInput('4')">4</div>
+                <div class="calc-btn" onclick="calcInput('5')">5</div>
+                <div class="calc-btn" onclick="calcInput('6')">6</div>
+                <div class="calc-btn" onclick="calcInput('.')">.</div>
+                <div class="calc-btn" onclick="calcInput('1')">1</div>
+                <div class="calc-btn" onclick="calcInput('2')">2</div>
+                <div class="calc-btn" onclick="calcInput('3')">3</div>
+                <div class="calc-btn" onclick="calcInput('0')">0</div>
+                <div class="calc-btn eq" onclick="calcSolve()">=</div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const KEY_NOTES = 'db_notes_v25', KEY_EVENTS = 'db_events_v25', KEY_TODOS = 'db_todos_v25', KEY_FINANCE = 'db_finance_v25', KEY_CITY = 'db_city_v25';
+        const store = (k, d) => localStorage.setItem(k, JSON.stringify(d));
+        const load = (k) => JSON.parse(localStorage.getItem(k)) || (k === KEY_EVENTS ? {} : (k === KEY_FINANCE ? {name:'', total:0, items:[]} : (k === KEY_CITY ? 'Aschaffenburg' : [])));
+
+        function handleEnter(e, cb) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();cb();}}
+        function handleEditEnter(e) { if(e.key==='Enter'){e.preventDefault();e.target.blur();}}
+        function toggleSec(id) { document.getElementById(id).classList.toggle('hidden'); }
+
+        async function fetchWeather() {
+            const city = load(KEY_CITY);
+            document.getElementById('cityInput').value = city;
+            try {
+                const res = await fetch(`https://wttr.in/${city}?format=%t+%c`);
+                const text = await res.text();
+                document.getElementById('weatherDisplay').innerText = text.trim() || "Stadt ?";
+            } catch(e) { document.getElementById('weatherDisplay').innerText = "Off?"; }
+        }
+        window.saveCity = () => { const val = document.getElementById('cityInput').value.trim(); if(val) { store(KEY_CITY, val); fetchWeather(); document.getElementById('cityInput').blur(); } };
+
+        window.openBackupModal = () => {
+            const data = { n:load(KEY_NOTES), e:load(KEY_EVENTS), t:load(KEY_TODOS), f:load(KEY_FINANCE), c:load(KEY_CITY) };
+            document.getElementById('backupArea').value = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+            document.getElementById('backupModal').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
+        };
+        window.processImport = () => {
+            const val = document.getElementById('backupArea').value; if(!val) return;
+            try {
+                const d = JSON.parse(decodeURIComponent(escape(atob(val))));
+                store(KEY_NOTES, d.n); store(KEY_EVENTS, d.e); store(KEY_TODOS, d.t); store(KEY_FINANCE, d.f); store(KEY_CITY, d.c);
+                location.reload();
+            } catch(e) { alert("Fehler!"); }
+        };
+
+        let cExp = "0";
+        function calcInput(v) { 
+            if(cExp === "0" && v !== ".") cExp = v; 
+            else cExp += v; 
+            document.getElementById('calcDisp').innerText = cExp; 
+        }
+        function calcClear() { cExp = "0"; document.getElementById('calcDisp').innerText = cExp; }
+        function calcSolve() { 
+            try { 
+                let res = eval(cExp.replace(/[^-()\d/*+.]/g, '')); 
+                cExp = Number.isInteger(res) ? res.toString() : res.toFixed(2);
+                document.getElementById('calcDisp').innerText = cExp; 
+            } catch(e) { cExp = "0"; document.getElementById('calcDisp').innerText = "Fehler"; } 
+        }
+
+        function updateFinance() { const f = load(KEY_FINANCE); f.name = document.getElementById('budgetName').value; f.total = parseFloat(document.getElementById('budgetTotal').value) || 0; store(KEY_FINANCE, f); renderFinance(); }
+        function addExpense() { const n = document.getElementById('expName'), v = document.getElementById('expVal'), f = load(KEY_FINANCE); if(!n.value||!v.value) return; f.items.unshift({name:n.value, val:parseFloat(v.value)}); store(KEY_FINANCE, f); n.value=''; v.value=''; renderFinance(); }
+        function renderFinance() {
+            const f = load(KEY_FINANCE); document.getElementById('budgetName').value = f.name; document.getElementById('budgetTotal').value = f.total;
+            const left = f.total - f.items.reduce((s, i) => s + i.val, 0);
+            const el = document.getElementById('budgetLeft'); el.innerText = left.toLocaleString('de-DE', {style:'currency', currency:'EUR'});
+            el.className = 'budget-left' + (left < 0 ? ' negative' : '');
+            document.getElementById('financeCont').innerHTML = f.items.map((item, i) => `<div class="finance-item"><div style="flex:1"><div contenteditable="true" onblur="editExp(${i},'name',this.innerText)" onkeydown="handleEditEnter(event)">${item.name}</div><small>${item.val.toFixed(2)} €</small></div><span onclick="delExp(${i})" style="color:red;cursor:pointer">✕</span></div>`).join('');
+        }
+        window.editExp = (i, fld, v) => { const f = load(KEY_FINANCE); f.items[i][fld] = fld === 'val' ? parseFloat(v) : v; store(KEY_FINANCE, f); renderFinance(); };
+        window.delExp = (i) => { const f = load(KEY_FINANCE); f.items.splice(i,1); store(KEY_FINANCE, f); renderFinance(); };
+
+        function renderTodos() {
+            const t = load(KEY_TODOS);
+            const s1 = t.filter(x => x.date || x.repeat !== 'none').sort((a,b) => (a.date || "9").localeCompare(b.date || "9"));
+            const s2 = t.filter(x => !x.date && x.repeat === 'none');
+            const html = (item) => {
+                const idx = t.indexOf(item);
+                return `<div class="todo-item" style="${item.done?'opacity:0.4':''}">
+                    <span class="check-btn" onclick="checkTodo(${idx})">✓</span>
+                    <div style="flex:1" contenteditable="true" onblur="editTodo(${idx},this.innerText)" onkeydown="handleEditEnter(event)">${item.text}</div>
+                    <small style="color:#007bff; margin-left:5px;">${item.date ? item.date.split('-').reverse().slice(0,2).join('.') : ''}</small>
+                    <span onclick="delTodo(${idx})" style="color:red;cursor:pointer;margin-left:10px">✕</span>
+                </div>`;
+            };
+            document.getElementById('todoSec1').innerHTML = s1.map(html).join('');
+            document.getElementById('todoSec2').innerHTML = s2.map(html).join('');
+            renderAgenda();
+        }
+        window.addTodo = () => {
+            const i = document.getElementById('todoIn'), d = document.getElementById('todoDate'), r = document.getElementById('todoRepeat'), t = load(KEY_TODOS);
+            if(!i.value.trim()) return; t.unshift({text:i.value, date:d.value, repeat:r.value, done:false});
+            store(KEY_TODOS, t); i.value=''; d.value=''; r.value='none'; renderTodos();
+        };
+        window.checkTodo = (i) => {
+            const t = load(KEY_TODOS), it = t[i];
+            if(!it.done && it.repeat !== 'none' && it.date) {
+                let d = new Date(it.date);
+                if(it.repeat==='daily') d.setDate(d.getDate()+1); else if(it.repeat==='weekly') d.setDate(d.getDate()+7);
+                else if(it.repeat==='biweekly') d.setDate(d.getDate()+14); else if(it.repeat==='monthly') d.setMonth(d.getMonth()+1);
+                else if(it.repeat==='bimonthly') d.setMonth(d.getMonth()+2); else if(it.repeat==='quarterly') d.setMonth(d.getMonth()+3);
+                else if(it.repeat==='semiannually') d.setMonth(d.getMonth()+6); else if(it.repeat==='annually') d.setFullYear(d.getFullYear()+1);
+                it.date = d.toISOString().split('T')[0];
+            } else { it.done = !it.done; }
+            store(KEY_TODOS, t); renderTodos();
+        };
+        window.delTodo = (i) => { const t = load(KEY_TODOS); t.splice(i,1); store(KEY_TODOS,t); renderTodos(); };
+        window.editTodo = (i, v) => { const t = load(KEY_TODOS); t[i].text = v; store(KEY_TODOS, t); renderAgenda(); };
+
+        let currDate = new Date(), selectedKey = "";
+        function renderCal() {
+            const cal = document.getElementById('calendar'), y = currDate.getFullYear(), m = currDate.getMonth();
+            cal.innerHTML = ''; document.getElementById('monthLabel').innerText = `${new Intl.DateTimeFormat('de-DE', {month:'long', year:'numeric'}).format(currDate)}`;
+            ['Mo','Di','Mi','Do','Fr','Sa','So'].forEach(d => cal.innerHTML += `<div style="font-size:0.7rem;text-align:center;color:#666">${d}</div>`);
+            const first = (new Date(y, m, 1).getDay() + 6) % 7, days = new Date(y, m + 1, 0).getDate(), evs = load(KEY_EVENTS);
+            for(let i=0; i<first; i++) cal.innerHTML += '<div></div>';
+            for(let d=1; d<=days; d++) {
+                const k = `${y}-${m+1}-${d}`, num = (evs[k] || []).length, today = new Date().toDateString() === new Date(y,m,d).toDateString() ? 'today' : '';
+                let dots = ''; for(let j=0; j < Math.min(num, 6); j++) dots += '<div class="dot"></div>';
+                cal.innerHTML += `<div class="cal-cell ${today}" onclick="openModal('${k}')"><span>${d}</span><div style="display:flex;flex-wrap:wrap;justify-content:center">${dots}</div></div>`;
+            }
+        }
+        window.openModal = (k) => { selectedKey = k; renderEvList(); document.getElementById('modalDate').innerText = k.split('-').reverse().join('.'); document.getElementById('modal').style.display='block'; document.getElementById('overlay').style.display='block'; };
+        function renderEvList() { const evs = load(KEY_EVENTS)[selectedKey] || []; document.getElementById('eventList').innerHTML = evs.map((e,i)=>`<div class="agenda-item">${e.t ? '<b>'+e.t+':</b> ' : ''}${e.v}<span onclick="delEv(${i})" style="color:red;cursor:pointer">✕</span></div>`).join(''); }
+        window.addEvent = () => {
+            const v = document.getElementById('eventInput').value, isAll = document.getElementById('eventAllDay').checked, t = isAll ? "" : document.getElementById('eventTime').value, evs = load(KEY_EVENTS);
+            if(!v) return; if(!evs[selectedKey]) evs[selectedKey]=[]; evs[selectedKey].push({v, t}); store(KEY_EVENTS, evs);
+            document.getElementById('eventInput').value=''; document.getElementById('eventTime').value=''; closeModal(); renderCal(); renderAgenda();
+        };
+        window.delEv = (i) => { const evs = load(KEY_EVENTS); evs[selectedKey].splice(i,1); if(!evs[selectedKey].length) delete evs[selectedKey]; store(KEY_EVENTS, evs); renderEvList(); renderCal(); renderAgenda(); };
+
+        function updateTime() {
+            const n = new Date(); document.getElementById('clock').innerText = n.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+            document.getElementById('dateStr').innerText = n.toLocaleDateString('de-DE', {weekday:'long', day:'2-digit', month:'long'});
+            const d = new Date(n.getTime()); d.setHours(0,0,0,0); d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
+            const w1 = new Date(d.getFullYear(), 0, 4);
+            document.getElementById('mainKW').innerText = `KW ${Math.round(((d.getTime() - w1.getTime()) / 86400000 - 3 + (w1.getDay() + 6) % 7) / 7) + 1}`;
+        }
+        function renderNotes() { const n = load(KEY_NOTES); document.getElementById('noteCont').innerHTML = n.map((note, i) => `<div class="note-card"><div style="flex:1" contenteditable="true" onblur="editNote(${i},this.innerText)" onkeydown="handleEditEnter(event)">${note.text}</div><span onclick="delNote(${i})" style="color:red;cursor:pointer;margin-left:8px">✕</span></div>`).join(''); }
+        function addNote() { const x = document.getElementById('noteText'); if(!x.value.trim()) return; const n = load(KEY_NOTES); n.unshift({text:x.value}); store(KEY_NOTES, n); x.value=''; renderNotes(); }
+        window.editNote = (i, t) => { const n = load(KEY_NOTES); n[i].text = t; store(KEY_NOTES, n); };
+        window.delNote = (i) => { const n = load(KEY_NOTES); n.splice(i,1); store(KEY_NOTES, n); renderNotes(); };
+        
+        function renderAgenda() {
+            const now = new Date(); now.setHours(0,0,0,0); const lim = new Date(now); lim.setDate(lim.getDate() + 7);
+            const evs = load(KEY_EVENTS), todos = load(KEY_TODOS), agEvs = [];
+            for(let k in evs) { const p = k.split('-'); const d = new Date(p[0], p[1]-1, p[2]); if(d >= now && d <= lim) evs[k].forEach(e => agEvs.push({...e, d:d, k:k})); }
+            
+            const evHtml = agEvs.length ? agEvs.sort((a,b)=>a.d-b.d).slice(0,3).map(e=>`<div class="agenda-item"><span>${e.v}</span><small>${e.k.split('-').reverse().slice(0,2).join('.')} ${e.t||''}</small></div>`).join('') : '<div class="empty-msg">Keine Termine</div>';
+            document.getElementById('agendaEvents').innerHTML = evHtml;
+
+            const todoAg = todos.filter(t => !t.done && t.date).sort((a,b) => a.date.localeCompare(b.date)).slice(0,3);
+            const todoHtml = todoAg.length ? todoAg.map(t => {
+                const isOverdue = new Date(t.date) < now;
+                return `<div class="agenda-item ${isOverdue?'overdue':''}"><span>${t.text}</span><small>${t.date.split('-').reverse().slice(0,2).join('.')}</small></div>`;
+            }).join('') : '<div class="empty-msg">Keine Aufgaben</div>';
+            document.getElementById('agendaTodos').innerHTML = todoHtml;
+        }
+        window.closeModal = () => { document.getElementById('modal').style.display='none'; document.getElementById('backupModal').style.display='none'; document.getElementById('overlay').style.display='none'; };
+        window.changeMonth = (d) => { currDate.setMonth(currDate.getMonth()+d); renderCal(); };
+        
+        setInterval(updateTime, 1000); updateTime(); renderCal(); renderNotes(); renderTodos(); renderFinance(); fetchWeather();
+    </script>
+</body>
+</html>
