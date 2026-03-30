@@ -79,10 +79,11 @@
     <h3 style="color:#007bff; margin-bottom:10px;">Backup / Import</h3>
     <textarea id="backupArea" style="height: 180px; font-size: 0.7rem; margin-bottom: 15px; font-family: monospace;"></textarea>
     
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
-        <button onclick="copyBackup()" style="background: #007bff;">Kopieren</button>
-        <button onclick="clearBackupField()" style="background: #ff4d4d;">Löschen</button>
-    </div>
+<div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+    <button onclick="copyBackup()" style="background: #007bff; font-size: 0.8rem;">Kopieren</button>
+    <button onclick="downloadBackup()" style="background: #FF9C07; font-size: 0.8rem;">Download</button>
+    <button onclick="clearBackupField()" style="background: #ff4d4d; font-size: 0.8rem;">Löschen</button>
+</div>
 
     <button onclick="processImport()" style="width:100%; background: #28a745; margin-bottom:10px;">Importieren</button>
     <button onclick="closeModal()" style="width:100%; background: #444;">Schließen</button>
@@ -232,6 +233,28 @@
             } catch(e) { document.getElementById('weatherDisplay').innerText = "Off?"; }
         }
         window.saveCity = () => { const val = document.getElementById('cityInput').value.trim(); if(val) { store(KEY_CITY, val); fetchWeather(); document.getElementById('cityInput').blur(); } };
+
+window.downloadBackup = () => {
+    const data = document.getElementById('backupArea').value;
+    if(!data) { alert("Kein Backup-Code vorhanden!"); return; }
+    
+    const date = new Date().toISOString().split('T')[0];
+    const filename = `dashboard_backup_${date}.txt`;
+    const blob = new Blob([data], { type: 'text/plain' });
+    
+    // Erstellt einen unsichtbaren Link zum Herunterladen
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    
+    // Aufräumen
+    setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(a.href);
+    }, 0);
+};
 
 window.openBackupModal = () => {
     const data = { 
