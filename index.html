@@ -150,9 +150,9 @@ input[type="date"], select {
                     <input type="text" style="width:84%; flex:none; id="todoIn" placeholder="Aufgabe..." onkeydown="if(event.key==='Enter') addTodo()">
                     <button onclick="addLink()" style="width:14%; flex:none;">+</button>
                 </div>
-                <div class="input-row">
-                    <input type="date" id="todoDate" style="width:49%;flex:none">
-                    <select id="todoRepeat" style="width:49%;flex:none">
+<div class="input-row" style="display: flex; ">
+    <input type="date" id="todoDate" style="width: calc(49%); flex: none;">
+<select id="todoRepeat" style="width: calc(49%); flex: none;">
                         <option value="none">Einmalig</option>
                         <option value="daily">Täglich</option>
                         <option value="weekly">Wöchentlich</option>
